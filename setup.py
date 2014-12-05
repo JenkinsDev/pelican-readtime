@@ -18,7 +18,7 @@ setup(
     license='MIT',
     author='David Jenkins',
     author_email='david.nicholas.jenkins@gmail.com',
-    py_modules=['pelican-readtime'],
+    py_modules=['readtime'],
     requires=['pelican'],
     include_package_data=True,
     classifiers=[
