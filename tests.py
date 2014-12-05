@@ -1,4 +1,5 @@
 import unittest
+
 from readtime import get_time_from_seconds, content_type_supported, pluralize
 
 
