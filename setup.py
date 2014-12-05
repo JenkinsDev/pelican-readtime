@@ -11,7 +11,7 @@ def read(*paths):
 
 setup(
     name='pelican-readtime',
-    version='0.1.0',
+    version='0.1.1',
     description='Plugin for Pelican that computes read time based on Medium\'s readtime "algorithm."',
     long_description='Plugin for Pelican that computes read time based on Medium\'s readtime "algorithm."',
     url='https://github.com/JenkinsDev/pelican-readtime',
