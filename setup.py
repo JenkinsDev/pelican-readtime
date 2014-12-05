@@ -19,6 +19,7 @@ setup(
     author='David Jenkins',
     author_email='david.nicholas.jenkins@gmail.com',
     py_modules=['pelican-readtime'],
+    requires=['pelican'],
     include_package_data=True,
     classifiers=[
         'Development Status :: 5 - Production/Stable',
