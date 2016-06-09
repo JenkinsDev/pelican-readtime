@@ -29,6 +29,7 @@ def read_time(content):
         minutes_str = pluralize(minutes, "Minute", "Minutes")
         seconds_str = pluralize(seconds, "Second", "Seconds")
         content.readtime = "{} and {}".format(minutes_str, seconds_str)
+        content.readtime_minutes = minutes + int(bool(seconds))
 
 
 def pluralize(measure, singular, plural):
