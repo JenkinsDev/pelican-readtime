@@ -1,4 +1,5 @@
 from pelican import signals
+from pelican.generators import ArticlesGenerator, PagesGenerator
 
 
 # We make AVERAGE_READING_WPM a float here so we don't have to make a float()
@@ -19,17 +20,19 @@ def read_time(content):
     Returns:
         None
     """
-    if content_type_supported(content):
-        # We get the content's text, split it at the spaces and check the
-        # length of the provided array to get a good estimation on the amount
-        # of words in the content.
-        words = len(content.content.split())
-        read_time_seconds = round((words / AVERAGE_READING_WPM) * 60, 2)
-        minutes, seconds = get_time_from_seconds(read_time_seconds)
-        minutes_str = pluralize(minutes, "Minute", "Minutes")
-        seconds_str = pluralize(seconds, "Second", "Seconds")
-        content.readtime = "{} and {}".format(minutes_str, seconds_str)
-        content.readtime_minutes = minutes + int(bool(seconds))
+    # REMOVED: instance.readtime and instance.readtime_minutes is provided for both articles and pages
+    # if content_type_supported(content):
+
+    # We get the content's text, split it at the spaces and check the
+    # length of the provided array to get a good estimation on the amount
+    # of words in the content.
+    words = len(content.content.split())
+    read_time_seconds = round((words / AVERAGE_READING_WPM) * 60, 2)
+    minutes, seconds = get_time_from_seconds(read_time_seconds)
+    minutes_str = pluralize(minutes, "Minute", "Minutes")
+    seconds_str = pluralize(seconds, "Second", "Seconds")
+    content.readtime = "{} and {}".format(minutes_str, seconds_str)
+    content.readtime_minutes = minutes + int(bool(seconds))
 
 
 def pluralize(measure, singular, plural):
@@ -64,7 +67,8 @@ def get_time_from_seconds(read_time_seconds):
     seconds = int(read_time_seconds % SECONDS_IN_MINUTE)
     return minutes, seconds
 
-
+'''
+# REMOVED: instance.readtime and instance.readtime_minutes is provided for both articles and pages
 def content_type_supported(content):
     """ Returns an answer to whether the content instance supplied is supported
     by the current configuration.
@@ -80,7 +84,7 @@ def content_type_supported(content):
     else:
         content_support = ["Article"]
     return class_name(content) in content_support
-
+'''
 
 def class_name(obj):
     """ A form of python reflection, returns the human readable, string formatted,
@@ -95,5 +99,19 @@ def class_name(obj):
     return obj.__class__.__name__
 
 
+def run_read_time(generators):
+    for generator in generators:
+        if isinstance(generator, ArticlesGenerator):
+            for article in generator.articles:
+                read_time(article)
+        elif isinstance(generator, PagesGenerator):
+            for page in generator.pages:
+                read_time(page)
+
+
 def register():
-    signals.content_object_init.connect(read_time)
+    try:
+        signals.all_generators_finalized.connect(run_read_time)
+    except AttributeError:
+        # This leads to problem parsing internal links with '{filename}'
+        signals.content_object_init.connect(read_time)
