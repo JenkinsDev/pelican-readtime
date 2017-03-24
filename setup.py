@@ -8,7 +8,7 @@ with open('README.rst') as readme_file:
 
 setup(
     name='pelican-readtime',
-    version='0.1.2',
+    version='0.1.3',
     description='Plugin for Pelican that computes read time based on Medium\'s readtime "algorithm."',
     long_description=readme,
     url='https://github.com/JenkinsDev/pelican-readtime',

@@ -23,7 +23,7 @@ def read_time(content):
         # We get the content's text, split it at the spaces and check the
         # length of the provided array to get a good estimation on the amount
         # of words in the content.
-        words = len(content.content.split())
+        words = len(content._content.split())
         read_time_seconds = round((words / AVERAGE_READING_WPM) * 60, 2)
         minutes, seconds = get_time_from_seconds(read_time_seconds)
         minutes_str = pluralize(minutes, "Minute", "Minutes")
