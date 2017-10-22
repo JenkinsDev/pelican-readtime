@@ -1,1 +1,1 @@
-from readtime import *
+from .readtime import *

@@ -1,154 +1,159 @@
 from pelican import signals
 from pelican.generators import ArticlesGenerator, PagesGenerator
 
-
-# We make AVERAGE_READING_WPM a float here so we don't have to make a float()
-# call later in the code base.  We do this because we need to get the amount of
-# time in fractional minutes and then convert that to total seconds.
-AVERAGE_READING_WPM = 275.0
-SECONDS_IN_MINUTE = 60
-
 class ReadTimeParser(object):
     def __init__(self):
-        self.data = {
+
+        self.initialized = False
+
+        self.language_settings = {
             'default': {
                 'wpm': 200,
-                'plurals': [
-                    'minute',
-                    'minutes'
-                ]
+                'min_singular': 'minute',
+                'min_plural': 'minutes'
             }
         }
 
-        settings_wpm = generator.settings.get('READ_TIME', data)
+        self.content_type_supported = ["Article", "Page"]
 
-        # Allows a wpm entry
-        if isinstance(settings_wpm, int):
-            self.data['default']['wpm'] = settings_wpm
+    def set_settings(self, sender):
 
-        # Default checker
-        elif isinstance(settings_wpm, dict):
-            if 'default' not in settings_wpm:
-                pass
-            elif 'wpm' not in settings_wpm['default']:
-                pass
-            elif 'plurals' not in settings_wpm['default']:
-                pass
-            elif not isinstance(settings_wpm['default']['wpm'], int):
-                pass
-            elif not isinstance(settings_wpm['default']['plurals'], list):
-                pass
-            elif len(settings_wpm['default']['plurals']) != 2:
-                pass
+        try:
+
+            self.initialized = True
+
+            settings_contenttype = sender.settings.get('READTIME_CONTENT_SUPPORT', self.content_type_supported)
+
+            if not isinstance(settings_contenttype, list):
+                raise Exception("Settings 'READTIME_CONTENT_SUPPORT' is not a list()")
             else:
-                data = settings_wpm
+                self.content_type_supported = settings_contenttype
 
-readtime_parser = ReadTimeParser()
+            settings_wpm = sender.settings.get('READTIME_LANGUAGE_SUPPORT', self.language_settings)
 
-def read_time(content):
-    """ Core function used to generate the read_time for content. Readtime is
-    algorithmically computed based on Medium's readtime functionality.
-    Read: https://medium.com/the-story/read-time-and-you-bc2048ab620c
+            # Allows a wpm entry
+            if isinstance(settings_wpm, int):
+                self.language_settings['default']['wpm'] = settings_wpm
 
-    Parameters:
-        :param content: Sub-Instance of pelican.content.Content
+            # Default checker
+            elif isinstance(settings_wpm, dict):
+                if 'default' not in settings_wpm:
+                    pass
+                else:
 
-    Returns:
-        None
-    """
+                    for key in settings_wpm.keys():
 
-    if content_type_supported(content):
-        # We get the content's text, split it at the spaces and check the
-        # length of the provided array to get a good estimation on the amount
-        # of words in the content.
-        words = len(content._content.split())
-        #words = len(content.content.split())
-        read_time_seconds = round((words / AVERAGE_READING_WPM) * 60, 2)
-        minutes, seconds = get_time_from_seconds(read_time_seconds)
-        minutes_str = pluralize(minutes, "Minute", "Minutes")
-        seconds_str = pluralize(seconds, "Second", "Seconds")
-        content.readtime = "{} and {}".format(minutes_str, seconds_str)
-        content.readtime_minutes = minutes + int(bool(seconds))
+                        if "wpm" not in settings_wpm[key]:
+                            raise Exception("Missing wpm value for the language: %s" % key)
+
+                        if not isinstance(settings_wpm[key]['wpm'], int):
+                            raise Exception("WPM is not an integer for the language: %s" % key)
+
+                        if "min_singular" not in settings_wpm[key]:
+                            raise Exception("Missing singular form for the language: %s" % key)
+
+                        if "min_plural" not in settings_wpm[key]:
+                            raise Exception("Missing plural form for the language: %s" % key)
+
+                    self.language_settings = settings_wpm
+
+        except Exception as e:
+            raise Exception("ReadTime Plugin: %s" % str(e))
+
+    def read_time(self, content):
+        """ Core function used to generate the read_time for content. Readtime is
+        algorithmically computed based on Medium's readtime functionality.
+        Read: https://medium.com/the-story/read-time-and-you-bc2048ab620c
+
+        Parameters:
+            :param content: Sub-Instance of pelican.content.Content
+
+        Returns:
+            None
+        """
+
+        if self.class_name(content) in self.content_type_supported:
+
+            language = 'default'
+            if content.lang in self.language_settings:
+                language = content.lang
+
+            # Exit if read time is set by article
+            if hasattr(content, 'readtime'):
+                return None
+
+            # We get the content's text, split it at the spaces and check the
+            # length of the provided array to get a good estimation on the amount
+            # of words in the content.
+            words = len(content._content.split())
+            #words = len(content.content.split())
+
+            read_time_seconds = round((words / self.language_settings[language]["wpm"]) * 60, 2)
+            read_time_minutes = int(read_time_seconds / self.language_settings[language]["wpm"])
+
+            minutes_str = self.pluralize(
+                read_time_minutes,
+                self.language_settings[language]["min_singular"], # minute
+                self.language_settings[language]["min_plural"]  # minutes
+            )
+
+            content.readtime        = "{}".format(read_time_minutes)
+            content.readtime_string = "{}".format(minutes_str)
+
+    def pluralize(self, measure, singular, plural):
+        """ Returns a string that contains the measure (amount) and its plural or
+        singular form depending on the amount.
+
+        Parameters:
+            :param measure: Amount, value, always a numerical value
+            :param singular: The singular form of the chosen word
+            :param plural: The plural form of the chosen word
+
+        Returns:
+            String
+        """
+        if measure == 1:
+            return "{} {}".format(measure, singular)
+        else:
+            return "{} {}".format(measure, plural)
+
+    def class_name(self, obj):
+        """ A form of python reflection, returns the human readable, string formatted,
+        version of a class's name.
+
+        Parameters:
+            :param obj: Any object.
+
+        Returns:
+            A human readable string version of the supplied object's class name.
+        """
+        return obj.__class__.__name__
 
 
-
-def pluralize(measure, singular, plural):
-    """ Returns a string that contains the measure (amount) and its plural or
-    singular form depending on the amount.
-
-    Parameters:
-        :param measure: Amount, value, always a numerical value
-        :param singular: The singular form of the chosen word
-        :param plural: The plural form of the chosen word
-
-    Returns:
-        String
-    """
-    if measure == 1:
-        return "{} {}".format(measure, singular)
-    else:
-        return "{} {}".format(measure, plural)
-
-
-def get_time_from_seconds(read_time_seconds):
-    """ Returns, in a tuple, the amount of minutes and seconds based on the
-    provided seconds.  87 seconds would return (1, 27); 1 minute and 27 seconds.
-
-    Parameters:
-        :param read_time_seconds: The amount of seconds to retrieve time from.
-
-    Returns:
-        Tuple containing minutes and seconds
-    """
-    minutes = int(read_time_seconds / SECONDS_IN_MINUTE)
-    seconds = int(read_time_seconds % SECONDS_IN_MINUTE)
-    return minutes, seconds
-
-
-def content_type_supported(content):
-    """ Returns an answer to whether the content instance supplied is supported
-    by the current configuration.
-
-    Parameters:
-        :param content: Sub-Instance of pelican.content.Content
-
-    Returns:
-        None
-    """
-    if "READTIME_CONTENT_SUPPORT" in content.settings:
-        content_support = content.settings["READTIME_CONTENT_SUPPORT"]
-    else:
-        content_support = ["Article, Page"]
-    return class_name(content) in content_support
-
-
-def class_name(obj):
-    """ A form of python reflection, returns the human readable, string formatted,
-    version of a class's name.
-
-    Parameters:
-        :param obj: Any object.
-
-    Returns:
-        A human readable string version of the supplied object's class name.
-    """
-    return obj.__class__.__name__
-
+READTIME_PARSER = ReadTimeParser()
 
 def run_read_time(generators):
 
     for generator in generators:
         if isinstance(generator, ArticlesGenerator):
             for article in generator.articles:
-                read_time(article)
+                READTIME_PARSER.read_time(article)
         elif isinstance(generator, PagesGenerator):
             for page in generator.pages:
-                read_time(page)
+                READTIME_PARSER.read_time(page)
 
+
+def initialize_parser(sender):
+    if not READTIME_PARSER.initialized:
+        READTIME_PARSER.set_settings(sender)
 
 def register():
+
+    signals.initialized.connect(initialize_parser)
+
     try:
         signals.all_generators_finalized.connect(run_read_time)
+
     except AttributeError:
         # This leads to problem parsing internal links with '{filename}'
         signals.content_object_init.connect(read_time)
