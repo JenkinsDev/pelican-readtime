@@ -66,3 +66,11 @@ Two variables are accessible through the read time plugin, **read_time** and **r
 {% if article.readtime_string %} This article takes {{article.readtime_string}} to read.{% endif %}
 // This article takes 4 minutes to read
 ```
+
+## Disclaimer
+
+This repository is reworked plugin which integrates some of the best of two existing plugins:
+- https://github.com/deepakrb/Pelican-Read-Time
+- https://github.com/JenkinsDev/pelican-readtime
+
+The objective was to fix a few issues and to improve (from my point of view) the overall behavior.
