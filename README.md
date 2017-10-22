@@ -1,7 +1,7 @@
 Readtime plugin for pelican
 ===================================
 
-Plugin for `Pelican`_ that computes read time based on `Medium's readtime`_
+Plugin for [Pelican](http://getpelican.com/) that computes read time based on [Medium's readtime](https://help.medium.com/hc/en-us/articles/214991667-Read-time)
 "algorithm".
 
 It adds a ``readtime`` and ``readtime_string`` attributes to every Articles and/or Pages, 
@@ -12,8 +12,8 @@ with the time estimation for reading the article.
 #### Adding 'ReadTime' to the list of plugins:
 ```python
 PLUGINS = [ 
-	... , 
-	'readtime'
+    ... , 
+    'readtime'
 ]
 ```
 
@@ -22,7 +22,7 @@ PLUGINS = [
 In your settings you would use assign the `READTIME_LANGUAGE_SUPPORT` variable to an integer like so:
 
 ***pelicanconf.py***
-```
+```python
 READTIME_LANGUAGE_SUPPORT = 180
 ```
 
@@ -34,7 +34,7 @@ This is the preferred method if you are dealing with multiple languages. Take a 
 
 
 ***pelicanconf.py***
-```
+```python
 READTIME_LANGUAGE_SUPPORT = {
     'default': {
         'wpm': 200,
@@ -57,12 +57,12 @@ Chances are the average reading time will not vary rapidly from language to lang
 
 Two variables are accessible through the read time plugin, **read_time** and **read_time_string**
 
-```
+```html
 {% if article.readtime %} This article takes {{article.readtime}} minute(s) to read.{% endif %}
 // This article takes 4 minute(s) to read
 ```
 
-```
+```html
 {% if article.readtime_string %} This article takes {{article.readtime_string}} to read.{% endif %}
 // This article takes 4 minutes to read
 ```
