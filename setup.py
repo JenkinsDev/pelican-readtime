@@ -5,7 +5,6 @@ from setuptools import setup
 with open('README.rst') as readme_file:
     readme = readme_file.read()
 
-
 setup(
     name='pelican-readtime',
     version='0.1.3',

@@ -29,7 +29,7 @@ class ReadTimeParser(object):
             else:
                 self.content_type_supported = settings_contenttype
 
-            settings_wpm = sender.settings.get('READTIME_LANGUAGE_SUPPORT', self.language_settings)
+            settings_wpm = sender.settings.get('READTIME_WPM', self.language_settings)
 
             # Allows a wpm entry
             if isinstance(settings_wpm, int):
@@ -44,16 +44,16 @@ class ReadTimeParser(object):
                     for key in settings_wpm.keys():
 
                         if "wpm" not in settings_wpm[key]:
-                            raise Exception("Missing wpm value for the language: %s" % key)
+                            raise Exception("Missing wpm value for the language: {}".format(key))
 
                         if not isinstance(settings_wpm[key]['wpm'], int):
-                            raise Exception("WPM is not an integer for the language: %s" % key)
+                            raise Exception("WPM is not an integer for the language: {}".format(key))
 
                         if "min_singular" not in settings_wpm[key]:
-                            raise Exception("Missing singular form for the language: %s" % key)
+                            raise Exception("Missing singular form for the language: {}".format(key))
 
                         if "min_plural" not in settings_wpm[key]:
-                            raise Exception("Missing plural form for the language: %s" % key)
+                            raise Exception("Missing plural form for the language: {}".format(key))
 
                     self.language_settings = settings_wpm
 
@@ -154,6 +154,5 @@ def register():
     try:
         signals.all_generators_finalized.connect(run_read_time)
 
-    except AttributeError:
-        # This leads to problem parsing internal links with '{filename}'
-        signals.content_object_init.connect(read_time)
+    except Exception as e:
+        raise ("ReadTime Plugin: Error during 'register' process: {}".format(str(e)))
