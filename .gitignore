@@ -4,3 +4,4 @@ pelican_readtime.egg-info
 dist
 build
 .pypirc
+/venv

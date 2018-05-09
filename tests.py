@@ -1,49 +1,141 @@
 import unittest
+import random
 
-from readtime import get_time_from_seconds, content_type_supported, pluralize
+from readtime import ReadTimeParser
 
 
 class TestReadTime(unittest.TestCase):
 
-    SINGULAR_SECONDS = "Second"
-    PLURAL_SECONDS = "Seconds"
+    def setUp(self):
 
-    def test_get_time_from_seconds_returns_correct_amount_of_time(self):
-        minutes, seconds = get_time_from_seconds(87)
-        self.assertEquals(minutes, 1)
-        self.assertEquals(seconds, 27)
-        minutes, seconds = get_time_from_seconds(120)
-        self.assertEquals(minutes, 2)
-        self.assertEquals(seconds, 0)
+        self.READTIME_CONTENT_SUPPORT = ["Article", "Page"]
 
-    def test_content_type_supported(self):
-        content = Content(content_support=["Content"])
-        self.assertTrue(content_type_supported(content))
+        self.READTIME_WPM = {
+            'default': {
+                'wpm': 123,
+                'min_singular': 'minute',
+                'min_plural': 'minutes'
+            },
+            'devil': {
+                'wpm': 666,
+                'min_singular': 'inferno',
+                'min_plural': 'infernos'
+            }
+        }
 
-        content = Content(content_support=["NoArticle", "Page"])
-        self.assertFalse(content_type_supported(content))
+        self.sender = Sender(self.READTIME_CONTENT_SUPPORT, self.READTIME_WPM)
 
-    def test_pluralize_minutes(self):
-        singular = "Minute"
-        plural = "Minutes"
-        minute = 1
-        minutes = 20
-        self.assertEquals("1 Minute", pluralize(minute, singular, plural))
-        self.assertEquals("20 Minutes", pluralize(minutes, singular, plural))
+        self.READTIME_PARSER = ReadTimeParser()
+        self.READTIME_PARSER.set_settings(self.sender)
 
-    def test_pluralize_seconds(self):
-        singular = "Second"
-        plural = "Seconds"
-        second = 1
-        seconds = 20
-        self.assertEquals("1 Second", pluralize(second, singular, plural))
-        self.assertEquals("20 Seconds", pluralize(seconds, singular, plural))
+    def test_parse_article(self):
+        article = Article(754)
+
+        raised = False
+        error = ''
+        try:
+            self.READTIME_PARSER.read_time(article)
+
+        except Exception as e:
+            error = str(e)
+            raised = True
+
+        self.assertFalse(raised, error)
+        self.assertTrue(
+            hasattr(article, 'readtime'),
+            "readtime property is not defined for an Article"
+        )
+        self.assertTrue(
+            hasattr(article, 'readtime_string'),
+            "readtime_string property is not defined for an Article"
+        )
+
+    def test_parse_page(self):
+        article = Page(754)
+
+        raised = False
+        error = ''
+        try:
+            self.READTIME_PARSER.read_time(article)
+
+        except Exception as e:
+            error = str(e)
+            raised = True
+
+        self.assertFalse(raised, error)
+        self.assertTrue(
+            hasattr(article, 'readtime'),
+            "readtime property is not defined for an Article"
+        )
+        self.assertTrue(
+            hasattr(article, 'readtime_string'),
+            "readtime_string property is not defined for an Article"
+        )
 
 
-class Content():
+    def test_parse_not_article(self):
+        article = UnsupportedArticle(754)
 
-    def __init__(self, content_support):
-        self.settings = { "READTIME_CONTENT_SUPPORT": content_support }
+        raised = False
+        error = ''
+        try:
+            self.READTIME_PARSER.read_time(article)
+
+        except Exception as e:
+            error = str(e)
+            raised = True
+
+        self.assertFalse(raised, error)
+        self.assertFalse(
+            hasattr(article, 'readtime'),
+            "readtime property should not be defined for an UnsupportedArticle"
+        )
+        self.assertFalse(
+            hasattr(article, 'readtime_string'),
+            "readtime_string property should not be defined for an UnsupportedArticle"
+        )
+
+
+class Sender():
+    def __init__(self, content_support, wpm):
+        self.settings = {
+            "READTIME_CONTENT_SUPPORT": content_support,
+            "READTIME_WPM": wpm
+        }
+
+
+class BaseArticle(object):
+    def __init__(self, word_length=200, **kwargs):
+        word_list = [
+            'knit', 'perfect', 'low', 'absent', 'waves', 'phobic', 'glove',
+            'unable', 'garrulous', 'abhorrent', 'annoyed', 'jittery',
+            'pink', 'store', 'wood', 'prevent', 'remove', 'voice',
+            'slip', 'puncture', 'wind', 'noise', 'faithful', 'grip',
+            'street', 'size', 'macho', 'tested', 'gentle', 'ill-fated',
+            'placid', 'vase', 'refuse', 'protest', 'grade',
+            'approval', 'adorable', 'collar', 'animal', 'toad'
+        ]
+
+        self.lang = 'en'
+
+        self._content = ""
+        for _ in range(word_length):
+            if _ != 0:
+                self._content += " "
+
+            self._content += random.choice(word_list)
+
+
+class Article(BaseArticle):
+    pass
+
+
+class Page(BaseArticle):
+    pass
+
+
+class UnsupportedArticle(BaseArticle):
+    pass
 
 
 if __name__ == "__main__":
