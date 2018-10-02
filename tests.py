@@ -8,7 +8,7 @@ class TestReadTime(unittest.TestCase):
 
     def setUp(self):
 
-        self.READTIME_CONTENT_SUPPORT = ["Article", "Page"]
+        self.READTIME_CONTENT_SUPPORT = ["Article", "Page", "Draft"]
 
         self.READTIME_WPM = {
             'default': {
@@ -95,6 +95,28 @@ class TestReadTime(unittest.TestCase):
             "readtime_string property should not be defined for an UnsupportedArticle"
         )
 
+    def test_parse_draft(self):
+        article = Draft(754)
+
+        raised = False
+        error = ''
+        try:
+            self.READTIME_PARSER.read_time(article)
+
+        except Exception as e:
+            error = str(e)
+            raised = True
+
+        self.assertFalse(raised, error)
+        self.assertTrue(
+            hasattr(article, 'readtime'),
+            "readtime property is not defined for a Draft"
+        )
+        self.assertTrue(
+            hasattr(article, 'readtime_string'),
+            "readtime_string property is not defined for a Draft"
+        )
+
 
 class Sender():
     def __init__(self, content_support, wpm):
@@ -124,6 +146,10 @@ class BaseArticle(object):
                 self._content += " "
 
             self._content += random.choice(word_list)
+
+
+class Draft(BaseArticle):
+    pass
 
 
 class Article(BaseArticle):
