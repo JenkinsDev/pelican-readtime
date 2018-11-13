@@ -14,7 +14,7 @@ class ReadTimeParser(object):
             }
         }
 
-        self.content_type_supported = ["Article", "Page"]
+        self.content_type_supported = ["Article", "Page", "Draft"]
 
     def set_settings(self, sender):
 
