@@ -82,13 +82,12 @@ class ReadTimeParser(object):
             None
         """
         if get_class_name(content) in self.content_type_supported:
-            lang = self.lang_settings.get(content.lang, 'default')
-
             # Exit if readtime is already set
-            if lang not in self.lang_settings or hasattr(content, 'readtime'):
+            if hasattr(content, 'readtime'):
                 return None
 
-            lang_conf = self.lang_settings[lang]
+            default_lang_conf = self.lang_settings['default']
+            lang_conf = self.lang_settings.get(content.lang, default_lang_conf)
             avg_reading_wpm = lang_conf["wpm"]
             num_words = len(content._content.split())
 
