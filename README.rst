@@ -1,10 +1,10 @@
 Readtime plugin for pelican
 ===========================
 
-Plugin for `Pelican`_ that computes read time based on `Medium’s readtime`_ “algorithm”.
+Plugin for `Pelican`_ that computes a piece of content's read time.
 
 It adds a ``readtime`` and ``readtime_string`` attributes to every
-Articles and/or Pages, with the time estimation for reading the article.
+article and/or page, with the time estimation for reading the article.
 
 Setting Up
 ----------

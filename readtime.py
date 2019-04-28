@@ -7,7 +7,7 @@ class ReadTimeParser(object):
     def __init__(self):
         self.initialized = False
         self.content_type_supported = ["Article", "Page", "Draft"]
-        self.language_settings = {
+        self.lang_settings = {
             'default': {
                 'wpm': 200,
                 'min_singular': 'minute',
@@ -15,45 +15,60 @@ class ReadTimeParser(object):
             }
         }
 
-    def set_settings(self, sender):
+    def _set_supported_content_type(self, content_types_supported):
+        """ Checks and sets the supported content types configuration value.
+        """
+        if not isinstance(content_types_supported, list):
+            raise TypeError(("Settings 'READTIME_CONTENT_SUPPORT' must be"
+                             "a list of content types."))
+
+        self.content_type_supported = content_types_supported
+
+    def _set_lang_settings(self, lang_settings):
+        """ Checks and sets the per language WPM, singular and plural values.
+        """
+        is_int = isinstance(lang_settings, int)
+        is_dict = isinstance(lang_settings, dict)
+        if not is_int and not is_dict:
+            raise TypeError(("Settings 'READTIME_WPM' must be either an int,"
+                             "or a dict with settings per language."))
+
+        if is_int:
+            self.lang_settings['default']['wpm'] = lang_settings
+        elif is_dict:
+            for lang, conf in lang_settings.items():
+                if 'wpm' not in conf:
+                    raise KeyError(('Missing wpm value for the'
+                                    'language: {}'.format(lang)))
+
+                if not isinstance(conf['wpm'], int):
+                    raise TypeError(('WPM is not an integer for'
+                                     'the language: {}'.format(lang)))
+
+                if "min_singular" not in conf:
+                    raise KeyError(('Missing singular form for'
+                                    'the language: {}'.format(lang)))
+
+                if "min_plural" not in conf:
+                    raise KeyError(('Missing plural form for'
+                                    'the language: {}'.format(lang)))
+
+            self.lang_settings = lang_settings
+
+    def initialize_settings(self, sender):
+        """ Initializes ReadTimeParser with configuration values set by the
+        site author.
+        """
         try:
             self.initialized = True
-            settings_contenttype = sender.settings.get(
+
+            settings_content_types = sender.settings.get(
                 'READTIME_CONTENT_SUPPORT', self.content_type_supported)
+            self._set_supported_content_type(settings_content_types)
 
-            if not isinstance(settings_contenttype, list):
-                raise Exception(
-                    "Settings 'READTIME_CONTENT_SUPPORT' must be a list")
-            else:
-                self.content_type_supported = settings_contenttype
-
-            settings_wpm = sender.settings.get(
-                'READTIME_WPM', self.language_settings)
-
-            # Allows a wpm entry
-            if isinstance(settings_wpm, int):
-                self.language_settings['default']['wpm'] = settings_wpm
-
-            # Default checker
-            elif isinstance(settings_wpm, dict):
-                if 'default' not in settings_wpm:
-                    pass
-                else:
-                    for key in settings_wpm.keys():
-                        if "wpm" not in settings_wpm[key]:
-                            raise Exception("Missing wpm value for the language: {}".format(key))
-
-                        if not isinstance(settings_wpm[key]['wpm'], int):
-                            raise Exception("WPM is not an integer for the language: {}".format(key))
-
-                        if "min_singular" not in settings_wpm[key]:
-                            raise Exception("Missing singular form for the language: {}".format(key))
-
-                        if "min_plural" not in settings_wpm[key]:
-                            raise Exception("Missing plural form for the language: {}".format(key))
-
-                    self.language_settings = settings_wpm
-
+            lang_settings = sender.settings.get(
+                'READTIME_WPM', self.lang_settings)
+            self._set_lang_settings(lang_settings)
         except Exception as e:
             raise Exception("ReadTime Plugin: %s" % str(e))
 
@@ -66,29 +81,30 @@ class ReadTimeParser(object):
         Returns:
             None
         """
+        if get_class_name(content) in self.content_type_supported:
+            lang = self.lang_settings.get(content.lang, 'default')
 
-        if self.class_name(content) in self.content_type_supported:
-            language = 'default'
-            if content.lang in self.language_settings:
-                language = content.lang
-
-            # Exit if read time is set by article
-            if hasattr(content, 'readtime'):
+            # Exit if readtime is already set
+            if lang not in self.lang_settings or hasattr(content, 'readtime'):
                 return None
 
-            avg_reading_wpm = self.language_settings[language]["wpm"]
+            lang_conf = self.lang_settings[lang]
+            avg_reading_wpm = lang_conf["wpm"]
             num_words = len(content._content.split())
 
-            read_time_seconds = round((num_words / avg_reading_wpm) * 60, 2)
-            read_time_minutes = int(read_time_seconds / avg_reading_wpm)
+            # Floor division so we don't have to convert float -> int
+            minutes = num_words // avg_reading_wpm
+            # Get seconds to read, then subtract our minutes as seconds from
+            # the time to get remainder seconds
+            seconds = int((num_words / avg_reading_wpm * 60) - (minutes * 60))
 
             minutes_str = self.pluralize(
-                read_time_minutes,
-                self.language_settings[language]["min_singular"], # minute
-                self.language_settings[language]["min_plural"]    # minutes
+                minutes,
+                lang_conf["min_singular"],
+                lang_conf["min_plural"]
             )
 
-            content.readtime = "{}".format(read_time_minutes)
+            content.readtime = "{}".format(minutes)
             content.readtime_string = "{}".format(minutes_str)
 
     def pluralize(self, measure, singular, plural):
@@ -108,20 +124,21 @@ class ReadTimeParser(object):
         else:
             return "{} {}".format(measure, plural)
 
-    def class_name(self, obj):
-        """ A form of python reflection, returns the human readable, string
-        formatted, version of a class's name.
-
-        Parameters:
-            :param obj: Any object.
-
-        Returns:
-            A human readable str of the supplied object's class name.
-        """
-        return obj.__class__.__name__
-
 
 READTIME_PARSER = ReadTimeParser()
+
+
+def get_class_name(obj):
+    """ A form of python reflection, returns the human readable, string
+    formatted, version of a class's name.
+
+    Parameters:
+        :param obj: Any object.
+
+    Returns:
+        A human readable str of the supplied object's class name.
+    """
+    return obj.__class__.__name__
 
 
 def run_read_time(generators):
@@ -137,7 +154,7 @@ def run_read_time(generators):
 
 def initialize_parser(sender):
     if not READTIME_PARSER.initialized:
-        READTIME_PARSER.set_settings(sender)
+        READTIME_PARSER.initialize_settings(sender)
 
 
 def register():
@@ -146,4 +163,4 @@ def register():
     try:
         signals.all_generators_finalized.connect(run_read_time)
     except Exception as e:
-        raise ("ReadTime Plugin: Error during 'register' process: {}".format(str(e)))
+        raise "ReadTime Plugin: Error during 'register' process: {}".format(str(e))

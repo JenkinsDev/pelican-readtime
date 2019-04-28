@@ -7,7 +7,7 @@ except ImportError:
     from distutils.core import (setup, find_packages)
 
 
-VERSION = (0, 1, 7)
+VERSION = (0, 2, 0)
 __version__ = '.'.join(map(str, VERSION[:3])) + "".join(VERSION[3:])
 
 __package_name__ = 'pelican-readtime'

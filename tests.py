@@ -24,7 +24,7 @@ class TestReadTime(unittest.TestCase):
         self.sender = Sender(self.READTIME_CONTENT_SUPPORT, self.READTIME_WPM)
 
         self.READTIME_PARSER = ReadTimeParser()
-        self.READTIME_PARSER.set_settings(self.sender)
+        self.READTIME_PARSER.initialize_settings(self.sender)
 
     def test_parse_article(self):
         article = Article(754)
@@ -53,9 +53,9 @@ class TestReadTime(unittest.TestCase):
 
         raised = False
         error = ''
+
         try:
             self.READTIME_PARSER.read_time(article)
-
         except Exception as e:
             error = str(e)
             raised = True
