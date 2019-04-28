@@ -39,9 +39,7 @@ class ReadTimeParser(object):
                 if 'default' not in settings_wpm:
                     pass
                 else:
-
                     for key in settings_wpm.keys():
-
                         if "wpm" not in settings_wpm[key]:
                             raise Exception("Missing wpm value for the language: {}".format(key))
 
@@ -60,12 +58,10 @@ class ReadTimeParser(object):
             raise Exception("ReadTime Plugin: %s" % str(e))
 
     def read_time(self, content):
-        """ Core function used to generate the read_time for content. Readtime is
-        algorithmically computed based on Medium's readtime functionality.
-        Read: https://medium.com/the-story/read-time-and-you-bc2048ab620c
+        """ Core function used to generate the read_time for content.
 
         Parameters:
-            :param content: Sub-Instance of pelican.content.Content
+            :param content: Instance of pelican.content.Content
 
         Returns:
             None
@@ -133,6 +129,7 @@ def run_read_time(generators):
         if isinstance(generator, ArticlesGenerator):
             for article in generator.articles:
                 READTIME_PARSER.read_time(article)
+
         elif isinstance(generator, PagesGenerator):
             for page in generator.pages:
                 READTIME_PARSER.read_time(page)

@@ -7,7 +7,7 @@ except ImportError:
     from distutils.core import (setup, find_packages)
 
 
-VERSION = (0, 1, 5)
+VERSION = (0, 1, 7)
 __version__ = '.'.join(map(str, VERSION[:3])) + "".join(VERSION[3:])
 
 __package_name__ = 'pelican-readtime'
@@ -32,14 +32,6 @@ if os.path.exists('README.rst'):
         os.path.join(here, 'README.rst'), 'r', 'utf-8').read()
 else:
     long_description = 'See ' + __homepage__
-
-
-def req_file(filename):
-    with codecs.open(os.path.join(here, filename), 'r', 'utf-8') as f:
-        content = f.readlines()
-
-    return [x.strip() for x in content]
-
 
 setup(
     name=__package_name__,
@@ -66,8 +58,8 @@ setup(
         'Topic :: Software Development :: Libraries :: Python Modules'
     ],
     keywords=__keywords__,
-    packages=find_packages(exclude=[]),
-    install_requires=req_file('requirements.txt'),
+    packages=[''],
+    install_requires=['pelican>=3.6'],
     zip_safe=True,
-    include_package_data=True,
+    include_package_data=True
 )
