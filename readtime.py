@@ -1,11 +1,12 @@
 from pelican import signals
 from pelican.generators import ArticlesGenerator, PagesGenerator
 
+
 class ReadTimeParser(object):
+
     def __init__(self):
-
         self.initialized = False
-
+        self.content_type_supported = ["Article", "Page", "Draft"]
         self.language_settings = {
             'default': {
                 'wpm': 200,
@@ -14,22 +15,20 @@ class ReadTimeParser(object):
             }
         }
 
-        self.content_type_supported = ["Article", "Page", "Draft"]
-
     def set_settings(self, sender):
-
         try:
-
             self.initialized = True
-
-            settings_contenttype = sender.settings.get('READTIME_CONTENT_SUPPORT', self.content_type_supported)
+            settings_contenttype = sender.settings.get(
+                'READTIME_CONTENT_SUPPORT', self.content_type_supported)
 
             if not isinstance(settings_contenttype, list):
-                raise Exception("Settings 'READTIME_CONTENT_SUPPORT' is not a list()")
+                raise Exception(
+                    "Settings 'READTIME_CONTENT_SUPPORT' must be a list")
             else:
                 self.content_type_supported = settings_contenttype
 
-            settings_wpm = sender.settings.get('READTIME_WPM', self.language_settings)
+            settings_wpm = sender.settings.get(
+                'READTIME_WPM', self.language_settings)
 
             # Allows a wpm entry
             if isinstance(settings_wpm, int):
@@ -73,7 +72,6 @@ class ReadTimeParser(object):
         """
 
         if self.class_name(content) in self.content_type_supported:
-
             language = 'default'
             if content.lang in self.language_settings:
                 language = content.lang
@@ -82,27 +80,24 @@ class ReadTimeParser(object):
             if hasattr(content, 'readtime'):
                 return None
 
-            # We get the content's text, split it at the spaces and check the
-            # length of the provided array to get a good estimation on the amount
-            # of words in the content.
-            words = len(content._content.split())
-            #words = len(content.content.split())
+            avg_reading_wpm = self.language_settings[language]["wpm"]
+            num_words = len(content._content.split())
 
-            read_time_seconds = round((words / self.language_settings[language]["wpm"]) * 60, 2)
-            read_time_minutes = int(read_time_seconds / self.language_settings[language]["wpm"])
+            read_time_seconds = round((num_words / avg_reading_wpm) * 60, 2)
+            read_time_minutes = int(read_time_seconds / avg_reading_wpm)
 
             minutes_str = self.pluralize(
                 read_time_minutes,
                 self.language_settings[language]["min_singular"], # minute
-                self.language_settings[language]["min_plural"]  # minutes
+                self.language_settings[language]["min_plural"]    # minutes
             )
 
-            content.readtime        = "{}".format(read_time_minutes)
+            content.readtime = "{}".format(read_time_minutes)
             content.readtime_string = "{}".format(minutes_str)
 
     def pluralize(self, measure, singular, plural):
-        """ Returns a string that contains the measure (amount) and its plural or
-        singular form depending on the amount.
+        """ Returns a string that contains the measure (amount) and its plural
+        or singular form depending on the amount.
 
         Parameters:
             :param measure: Amount, value, always a numerical value
@@ -118,22 +113,22 @@ class ReadTimeParser(object):
             return "{} {}".format(measure, plural)
 
     def class_name(self, obj):
-        """ A form of python reflection, returns the human readable, string formatted,
-        version of a class's name.
+        """ A form of python reflection, returns the human readable, string
+        formatted, version of a class's name.
 
         Parameters:
             :param obj: Any object.
 
         Returns:
-            A human readable string version of the supplied object's class name.
+            A human readable str of the supplied object's class name.
         """
         return obj.__class__.__name__
 
 
 READTIME_PARSER = ReadTimeParser()
 
-def run_read_time(generators):
 
+def run_read_time(generators):
     for generator in generators:
         if isinstance(generator, ArticlesGenerator):
             for article in generator.articles:
@@ -147,12 +142,11 @@ def initialize_parser(sender):
     if not READTIME_PARSER.initialized:
         READTIME_PARSER.set_settings(sender)
 
-def register():
 
+def register():
     signals.initialized.connect(initialize_parser)
 
     try:
         signals.all_generators_finalized.connect(run_read_time)
-
     except Exception as e:
         raise ("ReadTime Plugin: Error during 'register' process: {}".format(str(e)))

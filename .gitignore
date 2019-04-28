@@ -1,7 +1,14 @@
-__pycache__
 .idea
 pelican_readtime.egg-info
 dist
 build
-.pypirc
 /venv
+
+# Vim
+*.swo
+*.swp
+
+# Python
+__pycache__
+*.pyc
+.pypirc

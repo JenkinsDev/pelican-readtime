@@ -7,9 +7,7 @@ from readtime import ReadTimeParser
 class TestReadTime(unittest.TestCase):
 
     def setUp(self):
-
         self.READTIME_CONTENT_SUPPORT = ["Article", "Page", "Draft"]
-
         self.READTIME_WPM = {
             'default': {
                 'wpm': 123,
