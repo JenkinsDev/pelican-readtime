@@ -14,7 +14,7 @@ __package_name__ = 'pelican-readtime'
 __description__ = 'Plugin for Pelican that computes average read time.'
 
 __contact_names__ = 'David Jenkins, Deepak Bhalla, Jonathan Dektiar'
-__contact_emails__ = 'djenkinsdev@gmail.com; contact@deepakrb.com; contact@jonathandekhtiar.eu;'
+__contact_emails__ = 'djenkinsdev@gmail.com, contact@deepakrb.com, contact@jonathandekhtiar.eu'
 
 __homepage__ = 'https://github.com/JenkinsDev/pelican-readtime'
 __repository_url__ = 'https://github.com/JenkinsDev/pelican-readtime'
