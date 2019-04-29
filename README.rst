@@ -1,6 +1,9 @@
 Readtime plugin for pelican
 ===========================
 
+.. image:: https://travis-ci.com/JenkinsDev/pelican-readtime.svg?branch=master
+    :target: https://travis-ci.com/JenkinsDev/pelican-readtime
+
 Plugin for `Pelican`_ that computes a piece of content's read time.
 
 It adds a ``readtime`` and ``readtime_string`` attributes to every
