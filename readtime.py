@@ -11,7 +11,9 @@ class ReadTimeParser(object):
             'default': {
                 'wpm': 200,
                 'min_singular': 'minute',
-                'min_plural': 'minutes'
+                'min_plural': 'minutes',
+                'sec_singular': 'second',
+                'sec_plural': 'seconds'
             }
         }
 
@@ -33,6 +35,9 @@ class ReadTimeParser(object):
             raise TypeError(("Settings 'READTIME_WPM' must be either an int,"
                              "or a dict with settings per language."))
 
+        # For backwards compatability reasons we'll allow the
+        # READTIME_WPM setting to be set as an to override just the default
+        # set WPM.
         if is_int:
             self.lang_settings['default']['wpm'] = lang_settings
         elif is_dict:
@@ -43,15 +48,23 @@ class ReadTimeParser(object):
 
                 if not isinstance(conf['wpm'], int):
                     raise TypeError(('WPM is not an integer for'
-                                     'the language: {}'.format(lang)))
+                                     ' the language: {}'.format(lang)))
 
                 if "min_singular" not in conf:
-                    raise KeyError(('Missing singular form for'
-                                    'the language: {}'.format(lang)))
+                    raise KeyError(('Missing singular form for "minute" for'
+                                    ' the language: {}'.format(lang)))
 
                 if "min_plural" not in conf:
-                    raise KeyError(('Missing plural form for'
-                                    'the language: {}'.format(lang)))
+                    raise KeyError(('Missing plural form for "minutes" for'
+                                    ' the language: {}'.format(lang)))
+
+                if "sec_singular" not in conf:
+                    raise KeyError(('Missing singular form for "second" for'
+                                    ' the language: {}'.format(lang)))
+
+                if "sec_plural" not in conf:
+                    raise KeyError(('Missing plural form for "seconds" for'
+                                    ' the language: {}'.format(lang)))
 
             self.lang_settings = lang_settings
 
@@ -88,9 +101,9 @@ class ReadTimeParser(object):
 
             default_lang_conf = self.lang_settings['default']
             lang_conf = self.lang_settings.get(content.lang, default_lang_conf)
-            avg_reading_wpm = lang_conf["wpm"]
-            num_words = len(content._content.split())
+            avg_reading_wpm = lang_conf['wpm']
 
+            num_words = len(content._content.split())
             # Floor division so we don't have to convert float -> int
             minutes = num_words // avg_reading_wpm
             # Get seconds to read, then subtract our minutes as seconds from
@@ -99,12 +112,21 @@ class ReadTimeParser(object):
 
             minutes_str = self.pluralize(
                 minutes,
-                lang_conf["min_singular"],
-                lang_conf["min_plural"]
+                lang_conf['min_singular'],
+                lang_conf['min_plural']
             )
 
-            content.readtime = "{}".format(minutes)
-            content.readtime_string = "{}".format(minutes_str)
+            seconds_str = self.pluralize(
+                seconds,
+                lang_conf['sec_singular'],
+                lang_conf['sec_plural']
+            )
+
+            content.readtime = minutes
+            content.readtime_string = minutes_str
+            content.readtime_with_seconds = (minutes, seconds,)
+            content.readtime_string_with_seconds = "{}, {}".format(
+                minutes_str, seconds_str)
 
     def pluralize(self, measure, singular, plural):
         """ Returns a string that contains the measure (amount) and its plural

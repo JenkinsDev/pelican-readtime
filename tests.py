@@ -4,20 +4,27 @@ import random
 from readtime import ReadTimeParser
 
 
+TEST_WPM = 123
+
+
 class TestReadTime(unittest.TestCase):
 
     def setUp(self):
         self.READTIME_CONTENT_SUPPORT = ["Article", "Page", "Draft"]
         self.READTIME_WPM = {
             'default': {
-                'wpm': 123,
+                'wpm': TEST_WPM,
                 'min_singular': 'minute',
-                'min_plural': 'minutes'
+                'min_plural': 'minutes',
+                'sec_singular': 'second',
+                'sec_plural': 'seconds'
             },
             'devil': {
                 'wpm': 666,
                 'min_singular': 'inferno',
-                'min_plural': 'infernos'
+                'min_plural': 'infernos',
+                'sec_singular': 'hellhound',
+                'sec_plural': 'hellhounds'
             }
         }
 
@@ -26,93 +33,80 @@ class TestReadTime(unittest.TestCase):
         self.READTIME_PARSER = ReadTimeParser()
         self.READTIME_PARSER.initialize_settings(self.sender)
 
+    def assert_document_has_readtime_attributes(self, document):
+        class_name = document.__class__.__name__
+        self.assertTrue(
+            hasattr(document, 'readtime'),
+            "readtime property is not defined for an {}".format(class_name)
+        )
+        self.assertTrue(
+            hasattr(document, 'readtime_string'),
+            "readtime_string property is not defined for an {}".format(
+                class_name)
+        )
+        self.assertTrue(
+            hasattr(document, 'readtime_with_seconds'),
+            "readtime_with_seconds property is not defined for an {}".format(
+                class_name)
+        )
+        self.assertTrue(
+            hasattr(document, 'readtime_string_with_seconds'),
+            "readtime_string_with_seconds property is not defined for an {}".format(
+                class_name)
+        )
+
     def test_parse_article(self):
         article = Article(754)
+        self.READTIME_PARSER.read_time(article)
+        self.assert_document_has_readtime_attributes(article)
 
-        raised = False
-        error = ''
-        try:
-            self.READTIME_PARSER.read_time(article)
-
-        except Exception as e:
-            error = str(e)
-            raised = True
-
-        self.assertFalse(raised, error)
-        self.assertTrue(
-            hasattr(article, 'readtime'),
-            "readtime property is not defined for an Article"
-        )
-        self.assertTrue(
-            hasattr(article, 'readtime_string'),
-            "readtime_string property is not defined for an Article"
-        )
+        self.assertEqual(article.readtime, 6)
+        self.assertEqual(article.readtime_with_seconds, (6, 7))
+        self.assertEqual(article.readtime_string, "6 minutes")
+        self.assertEqual(
+            article.readtime_string_with_seconds, "6 minutes, 7 seconds")
 
     def test_parse_page(self):
-        article = Page(754)
+        page = Page(123)
+        self.READTIME_PARSER.read_time(page)
+        self.assert_document_has_readtime_attributes(page)
 
-        raised = False
-        error = ''
+        self.assertEqual(page.readtime, 1)
+        self.assertEqual(page.readtime_with_seconds, (1, 0))
+        self.assertEqual(page.readtime_string, "1 minute")
+        self.assertEqual(
+            page.readtime_string_with_seconds, "1 minute, 0 seconds")
 
-        try:
-            self.READTIME_PARSER.read_time(article)
-        except Exception as e:
-            error = str(e)
-            raised = True
+    def test_parse_draft(self):
+        draft = Draft(865)
+        self.READTIME_PARSER.read_time(draft)
+        self.assert_document_has_readtime_attributes(draft)
 
-        self.assertFalse(raised, error)
-        self.assertTrue(
-            hasattr(article, 'readtime'),
-            "readtime property is not defined for an Article"
-        )
-        self.assertTrue(
-            hasattr(article, 'readtime_string'),
-            "readtime_string property is not defined for an Article"
-        )
-
+        self.assertEqual(draft.readtime, 7)
+        self.assertEqual(draft.readtime_with_seconds, (7, 1))
+        self.assertEqual(draft.readtime_string, "7 minutes")
+        self.assertEqual(
+            draft.readtime_string_with_seconds, "7 minutes, 1 second")
 
     def test_parse_not_article(self):
         article = UnsupportedArticle(754)
+        self.READTIME_PARSER.read_time(article)
 
-        raised = False
-        error = ''
-        try:
-            self.READTIME_PARSER.read_time(article)
-
-        except Exception as e:
-            error = str(e)
-            raised = True
-
-        self.assertFalse(raised, error)
         self.assertFalse(
             hasattr(article, 'readtime'),
-            "readtime property should not be defined for an UnsupportedArticle"
+            "readtime property is not defined for an UnsupportedArticle"
         )
         self.assertFalse(
             hasattr(article, 'readtime_string'),
-            "readtime_string property should not be defined for an UnsupportedArticle"
+            "readtime_string property is not defined for an UnsupportedArticle"
         )
-
-    def test_parse_draft(self):
-        article = Draft(754)
-
-        raised = False
-        error = ''
-        try:
-            self.READTIME_PARSER.read_time(article)
-
-        except Exception as e:
-            error = str(e)
-            raised = True
-
-        self.assertFalse(raised, error)
-        self.assertTrue(
-            hasattr(article, 'readtime'),
-            "readtime property is not defined for a Draft"
+        self.assertFalse(
+            hasattr(article, 'readtime_with_seconds'),
+            "readtime_with_seconds property is not defined for an UnsupportedArticle"
         )
-        self.assertTrue(
-            hasattr(article, 'readtime_string'),
-            "readtime_string property is not defined for a Draft"
+        self.assertFalse(
+            hasattr(article, 'readtime_string_with_seconds'),
+            "readtime_string_with_seconds property is not defined for an UnsupportedArticle"
         )
 
 

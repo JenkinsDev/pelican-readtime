@@ -51,12 +51,16 @@ Take a look at the following settings
         'default': {
             'wpm': 200,
             'min_singular': 'minute',
-            'min_plural': 'minutes'
+            'min_plural': 'minutes',
+            'sec_singular': 'second',
+            'sec_plural': 'seconds'
         },
         'es': {
             'wpm': 220,
             'min_singular': 'minuto',
-            'min_plural': 'minutos'
+            'min_plural': 'minutos',
+            'sec_singular': 'segundo',
+            'sec_plural': 'segundos'
         }
     }
 
@@ -72,30 +76,33 @@ which make templating easier in the long run.
 Usage
 -----
 
-Two variables are accessible through the read time plugin,
-**read\_time** and **read\_time\_string**
+Four variables are accessible through the read time plugin:
+**readtime**, **readtime\_string**, **readtime\_with\_seconds**, and **readtime\_string\_with\_seconds**
 
 .. code:: html
 
     {% if article.readtime %} This article takes {{article.readtime}} minute(s) to read.{% endif %}
-    // This article takes 4 minute(s) to read
+    // This article takes 4 minute(s) to read.
 
 .. code:: html
 
     {% if article.readtime_string %} This article takes {{article.readtime_string}} to read.{% endif %}
-    // This article takes 4 minutes to read
+    // This article takes 4 minutes to read.
 
-Disclaimer
-----------
+.. code:: html
 
-This repository is reworked plugin which integrates some of the best of
-two existing plugins:
+    {% if article.readtime_with_seconds %}
+      This article takes {{article.read_with_seconds[0]}} minutes(s) and {{article.read_with_seconds[1]}} second(s) to read.
+    {% endif %}
+    // This article takes 4 minutes and 21 second(s) to read.
 
--  https://github.com/deepakrb/Pelican-Read-Time
--  https://github.com/JenkinsDev/pelican-readtime
+.. code:: html
 
-The objective was to fix a few issues and to improve (from my point of
-view) the overall behavior.
+    {% if article.readtime_string_with_seconds %} This article takes {{article.readtime_string_with_seconds}} to read.{% endif %}
+    // This article takes 4 minutes, 1 second to read.
+
+
+Links
+-----
 
 .. _Pelican: http://getpelican.com/
-.. _Medium’s readtime: https://help.medium.com/hc/en-us/articles/214991667-Read-time
