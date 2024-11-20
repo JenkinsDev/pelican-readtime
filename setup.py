@@ -1,10 +1,10 @@
-import os
 import codecs
+import os
 
 try:
-    from setuptools import (setup, find_packages)
+    from setuptools import find_namespace_packages, setup
 except ImportError:
-    from distutils.core import (setup, find_packages)
+    from distutils.core import find_namespace_packages, setup
 
 
 VERSION = (0, 2, 0)
@@ -59,7 +59,7 @@ setup(
         'Topic :: Software Development :: Libraries :: Python Modules'
     ],
     keywords=__keywords__,
-    packages=[''],
+    packages=find_namespace_packages(include=['pelican.*']),
     install_requires=['pelican>=3.6'],
     zip_safe=True,
     include_package_data=True
